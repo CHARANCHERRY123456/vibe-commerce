@@ -31,7 +31,7 @@ This project demonstrates a complete full-stack shopping cart application built 
 - ✅ **Error Handling** - Toast notifications for all user actions
 
 ### Bonus Features Implemented
-- ✅ **Database Persistence** - PostgreSQL database with proper schema
+- ✅ **Database Persistence** - MongoDB database with proper schema (Mongoose)
 - ✅ **Session-based Cart** - Cart persists across page refreshes
 - ✅ **Real-time Updates** - Instant UI updates on all actions
 - ✅ **Input Validation** - Client-side validation for all forms
@@ -41,7 +41,7 @@ This project demonstrates a complete full-stack shopping cart application built 
 
 ### Tech Stack
 - **Frontend**: React 18, TypeScript, Vite
-- **Backend**: Lovable Cloud (Supabase - PostgreSQL + Edge Functions)
+- **Backend**: Express + MongoDB (Mongoose)
 - **Styling**: Tailwind CSS with custom design system
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **State Management**: React Query for server state
@@ -93,7 +93,7 @@ src/
 │   ├── Index.tsx        # Main shopping page
 │   └── NotFound.tsx     # 404 page
 ├── integrations/
-│   └── supabase/        # Database client & types
+│   └── api/              # Backend API client wrappers (uses REST endpoints)
 ├── hooks/               # Custom React hooks
 ├── lib/                 # Utility functions
 └── index.css            # Design system & global styles
@@ -196,50 +196,38 @@ The application will be available at `http://localhost:8080`
 
 ## 📊 API Endpoints Documentation
 
-All data operations are handled through the Supabase client, which provides:
+All data operations are handled via the backend REST API (Express + MongoDB). Example usage:
 
 ### Products
 ```typescript
 // Get all products
-const { data, error } = await supabase
-  .from("products")
-  .select("*")
-  .order("name");
+const res = await fetch('/api/products');
+const products = await res.json();
 ```
 
 ### Cart Operations
 ```typescript
 // Add to cart
-await supabase.from("cart_items").insert({
-  product_id: productId,
-  quantity: 1,
-  session_id: sessionId,
+await fetch('/api/cart', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ productId, qty: 1, sessionId })
 });
 
-// Update quantity
-await supabase.from("cart_items")
-  .update({ quantity: newQuantity })
-  .eq("id", itemId);
+// Get cart
+const cartRes = await fetch(`/api/cart?sessionId=${encodeURIComponent(sessionId)}`);
+const cart = await cartRes.json(); // { items, total }
 
 // Remove item
-await supabase.from("cart_items")
-  .delete()
-  .eq("id", itemId);
-
-// Get cart
-await supabase.from("cart_items")
-  .select("*, products(*)")
-  .eq("session_id", sessionId);
+await fetch(`/api/cart/${itemId}`, { method: 'DELETE' });
 ```
 
 ### Checkout
 ```typescript
-// Create order
-await supabase.from("orders").insert({
-  customer_name: name,
-  customer_email: email,
-  total: calculatedTotal,
-  items: orderItems,
+await fetch('/api/checkout', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ sessionId, customer: { name, email } })
 });
 ```
 
@@ -270,7 +258,7 @@ This project demonstrates proficiency in:
 
 - **No Real Payments**: This is a mock checkout - no payment processing is implemented
 - **Session-based**: Cart uses browser localStorage for session management
-- **Database**: Uses PostgreSQL via Lovable Cloud (Supabase)
+- **Database**: Uses MongoDB via Mongoose (local or Atlas)
 - **Type Safety**: Full TypeScript implementation for reliability
 - **Scalable**: Code structure allows easy feature additions
 - **Production Ready**: Includes error handling, validation, and proper UX patterns

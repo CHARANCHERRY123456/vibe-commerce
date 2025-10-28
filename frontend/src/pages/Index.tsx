@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import { CartDrawer } from "@/components/CartDrawer";
 import { CheckoutDialog } from "@/components/CheckoutDialog";
@@ -46,15 +46,9 @@ const Index = () => {
     fetchProducts();
     fetchCart();
   }, []);
-
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("name");
-
-      if (error) throw error;
+      const data = await api.getProducts();
       setProducts(data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -66,16 +60,8 @@ const Index = () => {
 
   const fetchCart = async () => {
     try {
-      const { data, error } = await supabase
-        .from("cart_items")
-        .select(`
-          *,
-          products (name, price, image_url)
-        `)
-        .eq("session_id", sessionId);
-
-      if (error) throw error;
-      setCartItems(data || []);
+      const data = await api.getCart(sessionId);
+      setCartItems(data.items || []);
     } catch (error) {
       console.error("Error fetching cart:", error);
     }
@@ -84,27 +70,7 @@ const Index = () => {
   const handleAddToCart = async (productId: string) => {
     setIsLoadingCart(true);
     try {
-      const existingItem = cartItems.find(item => item.product_id === productId);
-
-      if (existingItem) {
-        const { error } = await supabase
-          .from("cart_items")
-          .update({ quantity: existingItem.quantity + 1 })
-          .eq("id", existingItem.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("cart_items")
-          .insert({
-            product_id: productId,
-            quantity: 1,
-            session_id: sessionId,
-          });
-
-        if (error) throw error;
-      }
-
+      await api.addToCart(productId, 1, sessionId);
       await fetchCart();
       toast.success("Added to cart!");
     } catch (error) {
@@ -120,12 +86,7 @@ const Index = () => {
 
     setIsLoadingCart(true);
     try {
-      const { error } = await supabase
-        .from("cart_items")
-        .update({ quantity: newQuantity })
-        .eq("id", itemId);
-
-      if (error) throw error;
+      await api.updateCartItem(itemId, newQuantity);
       await fetchCart();
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -138,12 +99,7 @@ const Index = () => {
   const handleRemoveItem = async (itemId: string) => {
     setIsLoadingCart(true);
     try {
-      const { error } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("id", itemId);
-
-      if (error) throw error;
+      await api.removeCartItem(itemId);
       await fetchCart();
       toast.success("Item removed from cart");
     } catch (error) {
@@ -172,26 +128,7 @@ const Index = () => {
         price: item.products.price,
         subtotal: item.products.price * item.quantity,
       }));
-
-      const { error } = await supabase
-        .from("orders")
-        .insert({
-          customer_name: customerData.name,
-          customer_email: customerData.email,
-          total,
-          items: orderItems,
-        });
-
-      if (error) throw error;
-
-      // Clear cart after successful order
-      const { error: deleteError } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("session_id", sessionId);
-
-      if (deleteError) throw deleteError;
-
+      await api.checkout(sessionId, { name: customerData.name, email: customerData.email });
       await fetchCart();
       toast.success("Order placed successfully!");
     } catch (error) {
@@ -293,7 +230,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
             <p>&copy; 2025 Vibe Commerce. Full Stack E-Commerce Demo.</p>
-            <p className="mt-1">Built with React, Lovable Cloud & PostgreSQL</p>
+            <p className="mt-1">Built with React & Express + MongoDB</p>
           </div>
         </div>
       </footer>

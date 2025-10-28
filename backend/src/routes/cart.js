@@ -58,4 +58,23 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// PATCH /api/cart/:id -> update quantity
+router.patch('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { qty } = req.body;
+    if (!id) return res.status(400).json({ error: 'id is required' });
+    if (!qty || qty < 1) return res.status(400).json({ error: 'qty must be >= 1' });
+    const item = await CartItem.findById(id);
+    if (!item) return res.status(404).json({ error: 'Cart item not found' });
+    item.quantity = qty;
+    await item.save();
+    const populated = await CartItem.findById(item._id).populate('product').lean();
+    res.json({ id: populated._id, product_id: populated.product._id, quantity: populated.quantity, products: { name: populated.product.name, price: populated.product.price, image_url: populated.product.image_url } });
+  } catch (err) {
+    console.error('Error updating cart item', err);
+    res.status(500).json({ error: 'Failed to update cart item' });
+  }
+});
+
 module.exports = router;
