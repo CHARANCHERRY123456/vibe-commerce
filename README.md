@@ -75,4 +75,34 @@ Vite is configured to proxy `/api` requests to `http://localhost:4000` so both s
 - Zod validators are included in the backend code; if you add/remove packages, run `npm install` inside `backend/` before starting.
 - This README intentionally excludes any screenshot placeholders as requested.
 
+## Screenshots
+
+Below are a few screenshots from the running app. Images are stored in the `images/` folder.
+
+<p align="center">
+	<img src="images/home.png" alt="Homepage - Products" width="900" style="max-width:100%;height:auto;" />
+</p>
+
+_Homepage (products list)_
+
+<p align="center">
+	<img src="images/checkout_cart.png" alt="Cart during checkout" width="900" style="max-width:100%;height:auto;" />
+</p>
+
+_Cart / Checkout view_
+
+<p align="center">
+	<img src="images/empty_checkout.png" alt="Empty checkout" width="900" style="max-width:100%;height:auto;" />
+</p>
+
+_Empty checkout state_
+
+<p align="center">
+	<img src="images/payment_failed.png" alt="Payment failed" width="900" style="max-width:100%;height:auto;" />
+</p>
+
+_Payment failed example_
+
+If you want the images resized differently, moved to a different folder (for example `docs/screenshots/`), or prefer thumbnails that link to full-size images, tell me which option and I will update the README and move files accordingly.
+
 If you want me to also update the `frontend/README.md` or `backend/README.md`, say so and I will apply the same cleanup.
