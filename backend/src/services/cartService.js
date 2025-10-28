@@ -25,7 +25,17 @@ async function addToCart({ productId, qty = 1, sessionId }) {
 async function getCart(sessionId) {
   if (!sessionId) throw new ApiError(400, 'sessionId is required');
   const items = await CartItem.find({ session_id: sessionId }).populate('product').lean();
-  const mapped = items.map(i => ({ id: i._id, product_id: i.product._id, quantity: i.quantity, products: { name: i.product.name, price: i.product.price, image_url: i.product.image_url } }));
+
+  // Filter out any cart items whose product was removed
+  const validItems = items.filter(i => i && i.product);
+
+  const mapped = validItems.map(i => ({
+    id: i._id,
+    product_id: i.product._id,
+    quantity: i.quantity,
+    products: { name: i.product.name, price: i.product.price, image_url: i.product.image_url }
+  }));
+
   const total = mapped.reduce((sum, it) => sum + (it.products.price * it.quantity), 0);
   return { items: mapped, total };
 }
