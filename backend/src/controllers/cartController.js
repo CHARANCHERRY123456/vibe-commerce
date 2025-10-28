@@ -1,9 +1,16 @@
 const cartService = require('../services/cartService');
+const { validateAddToCart, validateUpdateQty } = require('../validators/cartValidator');
+const ApiError = require('../errors/ApiError');
 
 async function addToCart(req, res) {
-  const { productId, qty, sessionId } = req.body;
-  const out = await cartService.addToCart({ productId, qty, sessionId });
-  res.json(out);
+  try {
+    const data = validateAddToCart(req.body);
+    const out = await cartService.addToCart(data);
+    res.json(out);
+  } catch (err) {
+    if (err && err.status === 400) throw new ApiError(400, err.message);
+    throw err;
+  }
 }
 
 async function getCart(req, res) {
@@ -19,10 +26,15 @@ async function removeCartItem(req, res) {
 }
 
 async function updateCartItem(req, res) {
-  const id = req.params.id;
-  const { qty } = req.body;
-  const out = await cartService.updateCartItem(id, qty);
-  res.json(out);
+  try {
+    const id = req.params.id;
+    const data = validateUpdateQty(req.body);
+    const out = await cartService.updateCartItem(id, data.qty);
+    res.json(out);
+  } catch (err) {
+    if (err && err.status === 400) throw new ApiError(400, err.message);
+    throw err;
+  }
 }
 
 module.exports = {

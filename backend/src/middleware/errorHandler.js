@@ -9,7 +9,6 @@ module.exports = (err, req, res, next) => {
     return res.status(err.statusCode).json(payload);
   }
 
-  // For validation errors thrown by mongoose or similar
   if (err.name === 'ValidationError') {
     return res.status(400).json({ error: 'Validation error', details: err.errors });
   }

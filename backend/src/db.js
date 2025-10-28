@@ -6,8 +6,7 @@ dotenv.config();
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/vibe-commerce';
 
 async function connectDB() {
-  // Return the mongoose connection promise so callers can await it
-  return mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+  return mongoose.connect(MONGO_URI);
 }
 
 module.exports = {

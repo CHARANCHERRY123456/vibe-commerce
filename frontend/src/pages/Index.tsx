@@ -31,6 +31,7 @@ const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingCart, setIsLoadingCart] = useState(false);
+  const [loadingProductsMap, setLoadingProductsMap] = useState<Record<string, boolean>>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [sessionId] = useState(() => {
@@ -68,7 +69,8 @@ const Index = () => {
   };
 
   const handleAddToCart = async (productId: string) => {
-    setIsLoadingCart(true);
+    // per-product loading state so other product buttons aren't affected
+    setLoadingProductsMap(prev => ({ ...prev, [productId]: true }));
     try {
       await api.addToCart(productId, 1, sessionId);
       await fetchCart();
@@ -77,13 +79,12 @@ const Index = () => {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add item to cart");
     } finally {
-      setIsLoadingCart(false);
+      setLoadingProductsMap(prev => ({ ...prev, [productId]: false }));
     }
   };
 
   const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-
     setIsLoadingCart(true);
     try {
       await api.updateCartItem(itemId, newQuantity);
@@ -210,7 +211,7 @@ const Index = () => {
                 {...product}
                 imageUrl={product.image_url}
                 onAddToCart={handleAddToCart}
-                isLoading={isLoadingCart}
+                isLoading={!!loadingProductsMap[product.id]}
               />
             ))}
           </div>
